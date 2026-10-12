@@ -610,7 +610,7 @@ section{padding:6rem 0;position:relative}
 /* ===== Edit these details, then re-upload. Empty values stay hidden on the page. ===== */
 var PROFILE = {
   github: "https://github.com/Purva-225",
-  linkedin: "https://www.linkedin.com/in/purva-nigade-9b08a235a",  
+  linkedin: "www.linkedin.com/in/purva-nigade-9b08a235a",   
   email: "purvanigade6@gmail.com",     
   phone: "+91-7620687121",      
   resume: "https://drive.google.com/file/d/1LCz4eZ1Mxc1azqZXaZUgfpM6Gt1cH6tq/view?usp=drive_link",     // link to your resume PDF, e.g. "assets/resume.pdf"
@@ -908,18 +908,29 @@ var PROFILE = {
     f.addEventListener('focus', function () { f.parentNode.classList.add('focused'); });
     f.addEventListener('blur', function () { f.parentNode.classList.remove('focused'); });
   });
+    var WEB3FORMS_KEY = "65568e58-5ba8-4982-bbe5-f7ad6b56863b";   // paste your Web3Forms access key between the quotes
   $('#contactForm').addEventListener('submit', function (e) {
     e.preventDefault();
+    var form = e.target, btn = $('button[type="submit"]', form);
     var n = $('#cName').value.trim(), em = $('#cEmail').value.trim(), s = $('#cSubject').value.trim(), m = $('#cMessage').value.trim();
     if (!n || !em || !s || !m) { toast('Please fill in every field.'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { toast('Enter a valid email address.'); return; }
-    if (!PROFILE.email) { toast('The contact form is not connected to an email yet.'); return; }
-    var bodyText = m + '\n\n' + n + '\n' + em;
-    window.location.href = 'mailto:' + PROFILE.email + '?subject=' + encodeURIComponent(s) + '&body=' + encodeURIComponent(bodyText);
-    toast('Opening your email app.');
+    if (!WEB3FORMS_KEY) { toast('The contact form is not connected yet. Please email me directly.'); return; }
+    btn.disabled = true; toast('Sending your message...');
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ access_key: WEB3FORMS_KEY, name: n, email: em, replyto: em, subject: s, message: m })
+    })
+      .then(function (res) { return res.json().then(function (d) { return { ok: res.ok && d.success !== false }; }); })
+      .then(function (r) {
+        if (r.ok) { toast('Message sent. Thank you!'); form.reset(); }
+        else { toast('Could not send your message. Please try again or email me directly.'); }
+      })
+      .catch(function () { toast('Could not send your message. Check your connection and try again.'); })
+      .then(function () { btn.disabled = false; });
   });
 })();
 </script>
-
 </body>
 </html>
